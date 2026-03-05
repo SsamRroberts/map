@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Leaflet Map – Production Layout</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-minimap/dist/Control.MiniMap.min.css" />
+
+  <style>
+    html, body { margin:0; padding:0; height:100%; }
+    #map { width:100%; height:100%; }
+
+    /* B&W tiles for main map */
+    .bw-tile { filter: grayscale(100%) brightness(90%) !important; }
+
+    /* Title control */
+    .title-control {
+      background: rgba(255,255,255,0.9);
+      padding: 10px 12px;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      font-family: sans-serif;
+      line-height: 1.4em;
+    }
+    .title-control h2 { margin:0 0 4px 0; font-size:1.2em; }
+    .title-control p { margin:0; font-size:0.9em; }
+
+    /* Legend styling */
+    .legend {
+      background: white;
+      padding: 6px;
+      border:1px solid #ccc;
+      border-radius:4px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      font-family: sans-serif;
+      line-height:1.3em;
+      margin-bottom:5px;
+    }
+    .legend-color { display:inline-block; width:20px; height:20px; margin-right:5px; vertical-align:middle; }
+
+    /* Bottom-right controls spacing */
+    .leaflet-bottom.leaflet-right .leaflet-control {
+      margin-bottom: 8px; /* space between MiniMap, scale, legend */
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-minimap/dist/Control.MiniMap.min.js"></script>
+
+  <script>
+    // --- GeoJSON sample points ---
+    const geojsonData = {
+      "type": "FeatureCollection",
+      "features": [
+        { "type": "Feature", "properties": {"name": "Point 1", "type": "A"}, "geometry": {"type": "Point", "coordinates": [-0.1, 51.5]} },
+        { "type": "Feature", "properties": {"name": "Point 2", "type": "B"}, "geometry": {"type": "Point", "coordinates": [-0.12, 51.52]} },
+        { "type": "Feature", "properties": {"name": "Point 3", "type": "C"}, "geometry": {"type": "Point", "coordinates": [-0.08, 51.48]} },
+        { "type": "Feature", "properties": {"name": "Point 4", "type": "D"}, "geometry": {"type": "Point", "coordinates": [-0.11, 51.49]} },
+        { "type": "Feature", "properties": {"name": "Point 5", "type": "E"}, "geometry": {"type": "Point", "coordinates": [-0.09, 51.51]} },
+        { "type": "Feature", "properties": {"name": "Point 6", "type": "F"}, "geometry": {"type": "Point", "coordinates": [-0.13, 51.5]} }
+      ]
+    };
+
+    const typeColors = {
+      "A": "#b35807",
+      "B": "#e4ad6c",
+      "C": "#f1e2cd",
+      "D": "#ccece7",
+      "E": "#80cdbb",
+      "F": "#009380"
+    };
+
+    // --- Initialize map ---
+    const map = L.map('map').setView([51.5, -0.1], 13);
+
+    // B&W tiles
+    const osmBW = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+      className: 'bw-tile'
+    }).addTo(map);
+
+    // --- GeoJSON points ---
+    function style(feature) {
+      return {
+        radius: 9,
+        fillColor: typeColors[feature.properties.type] || "#000000",
+        color: '#000',
+        weight: 1.5,
+        opacity: 1,
+        fillOpacity: 0.6
+      };
+    }
+    const geojsonLayer = L.geoJSON(geojsonData, {
+      pointToLayer: (feature, latlng) => L.circleMarker(latlng, style(feature)),
+      onEachFeature: (feature, layer) => layer.bindPopup(feature.properties.name)
+    }).addTo(map);
+    map.fitBounds(geojsonLayer.getBounds());
+
+    // --- Bottom-left: Title control ---
+    const titleControl = L.Control.extend({
+      options: { position: 'bottomleft' },
+      onAdd: function(map) {
+        const container = L.DomUtil.create('div', 'title-control');
+        container.innerHTML = `
+          <h2>Sample Map Title</h2>
+          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin lacinia.</p>
+        `;
+        L.DomEvent.disableClickPropagation(container);
+        L.DomEvent.disableScrollPropagation(container);
+        return container;
+      }
+    });
+    map.addControl(new titleControl());
+
+    // --- Bottom-right: Legend, Scale, MiniMap ---
+    // Legend
+    const legend = L.control({ position: 'bottomright' });
+    legend.onAdd = function(map) {
+      const div = L.DomUtil.create('div', 'legend');
+      for (const [type,color] of Object.entries(typeColors)) {
+        div.innerHTML += `<div><span class="legend-color" style="background:${color}"></span> Type ${type}</div>`;
+      }
+      return div;
+    };
+    legend.addTo(map);
+
+    // Scale bar
+    L.control.scale({ position: 'bottomright', metric:true, imperial:false, maxWidth:200 }).addTo(map);
+
+    // MiniMap inset
+    const osmColor = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
+    const miniMap = new L.Control.MiniMap(osmColor, { toggleDisplay:false, minimized:false, position:'bottomright' }).addTo(map);
+
+    function updateMiniRect() {
+      if(window.miniRect) miniMap._miniMap.removeLayer(window.miniRect);
+      window.miniRect = L.rectangle(map.getBounds(), { color:'grey', weight:1.5, fillOpacity:0.2 }).addTo(miniMap._miniMap);
+    }
+    updateMiniRect();
+    map.on('moveend', updateMiniRect);
+  </script>
+</body>
+</html>
