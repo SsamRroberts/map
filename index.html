@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Northern East Ghana — Tree Planting Sites</title>
+  <title>Kpakpiri — Tree Planting Sites</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -298,6 +298,96 @@
     }
 
 
+    /* ── Tree pictogram ── */
+    .tree-picto-wrap {
+      display: grid;
+      grid-template-columns: auto auto;
+      gap: 6px;
+    }
+    .tree-picto-wrap .leaflet-control {
+      margin: 0 !important;
+    }
+    .tree-pictogram {
+      background: rgba(255,255,255,0.92);
+      border: none;
+      border-left: 8px solid var(--site-color, var(--bgs-border));
+      padding: 12px 14px;
+      font-family: var(--sans);
+      font-size: 0.75rem;
+      max-width: 320px;
+      cursor: default;
+      transition: background 0.15s;
+    }
+    .tree-pictogram:hover {
+      background: rgba(255,255,255,1);
+    }
+    .tree-picto-title {
+      font-family: var(--serif);
+      font-weight: 700;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border-bottom: 1.5px solid var(--bgs-border);
+      padding-bottom: 4px;
+      margin-bottom: 4px;
+    }
+    .tree-picto-subtitle {
+      font-size: 0.7rem;
+      color: var(--bgs-muted);
+    }
+    .tree-site-header {
+      font-weight: 600;
+      margin: 0 0 6px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .tree-species-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      margin-bottom: 5px;
+    }
+    .tree-icon-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 14px);
+      gap: 1px;
+      flex-shrink: 0;
+    }
+    .tree-species-info {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 18px;
+    }
+    .tree-species-label {
+      font-size: 0.65rem;
+      color: var(--bgs-muted);
+      white-space: nowrap;
+      font-style: italic;
+      line-height: 1.2;
+    }
+    .tree-species-common {
+      font-size: 0.65rem;
+      color: var(--bgs-muted);
+      font-style: normal;
+    }
+    .tree-species-count {
+      font-size: 0.65rem;
+      color: var(--bgs-title);
+      font-weight: 600;
+    }
+    .tree-icon-partial {
+      display: inline-block;
+      overflow: hidden;
+      vertical-align: middle;
+      line-height: 0;
+    }
+    .leaflet-top.leaflet-left {
+      top: 50px;
+      left: 50px;
+    }
+
     /* ── Hide default Leaflet controls — we render our own ── */
     .leaflet-control-zoom { display: none !important; }
     .leaflet-control-attribution {
@@ -372,8 +462,15 @@
 
       <!-- Legend -->
       <div class="panel">
-        <div class="panel-title">Explanation</div>
+        <div class="panel-title">Sites</div>
         <div id="legendEntries"></div>
+      </div>
+
+      <!-- Species key -->
+      <div class="panel">
+        <div class="panel-title">Species</div>
+        <div style="font-size:0.7rem;color:var(--bgs-muted);margin-bottom:6px">1 icon = 500 trees</div>
+        <div id="speciesLegend"></div>
       </div>
 
       <!-- Inset / location map -->
@@ -388,15 +485,15 @@
     <footer class="footer">
       <img src="logo.jpg" alt="Logo" class="footer-logo">
       <div class="footer-identity">
-        <div class="footer-title">Northern East Ghana</div>
+        <div class="footer-title">Kpakpiri</div>
         <div class="footer-subtitle">Tree Planting Sites &mdash; West Mamprusi Municipal</div>
       </div>
       <table class="footer-table">
         <tr>
           <td class="ft-label">Sites</td>
-          <td class="ft-value">20</td>
-          <td class="ft-label">Villages</td>
           <td class="ft-value">4</td>
+          <td class="ft-label">Village</td>
+          <td class="ft-value">Kpakpiri</td>
           <td class="ft-label">Survey</td>
           <td class="ft-value">Sep 2025</td>
         </tr>
@@ -418,21 +515,28 @@
   <script src="data.js"></script>
 
   <script>
-    // ── Village colour palette ──
-    const villageColors = {
-      "Gbeo":     "#7b9f8e",
-      "Kpakpiri": "#d4a96a",
-      "Kpatuse":  "#a68bb2",
-      "Kulugu":   "#c9b97a"
+    // ── Site colour palette ──
+    const siteColors = {
+      "Kparikpiri planting site 1_2025": "#7b9f8e",
+      "Kparikpiri Planting site 2_2025": "#d4a96a",
+      "Kpakpiri planting site 3_2025":   "#a68bb2",
+      "Kparipiri planting site 4":       "#c27256"
+    };
+
+    const siteLabels = {
+      "Kparikpiri planting site 1_2025": "Site 1",
+      "Kparikpiri Planting site 2_2025": "Site 2",
+      "Kpakpiri planting site 3_2025":   "Site 3",
+      "Kparipiri planting site 4":       "Site 4"
     };
 
     // ── Populate legend ──
     const legendEl = document.getElementById('legendEntries');
-    for (const [village, color] of Object.entries(villageColors)) {
+    for (const [site, color] of Object.entries(siteColors)) {
       const row = document.createElement('div');
       row.className = 'legend-row';
       row.innerHTML = `<div class="legend-swatch" style="background:${color}"></div>
-        <span class="legend-label">${village}</span>`;
+        <span class="legend-label">${siteLabels[site]}</span>`;
       legendEl.appendChild(row);
     }
 
@@ -468,14 +572,14 @@
     }
 
     // ── Main map ──
-    const initialZoom = zoomForScale(100000, 10.575);
+    const initialZoom = zoomForScale(25000, 10.5393);
     const map = L.map('map', {
       zoomControl: false,
       attributionControl: true,
       zoomSnap: 0,
       zoomDelta: 0,
       wheelPxPerZoomLevel: 120
-    }).setView([10.575, -0.767], initialZoom);
+    }).setView([10.5393, -0.7397], initialZoom);
 
     // Snap zoom to nice levels, recalculated for current latitude
     function snapZoom(direction) {
@@ -535,9 +639,9 @@
 
     // ── GeoJSON polygons ──
     function polyStyle(feature) {
-      const village = feature.properties['group_survey/group_basic_information_02/village'];
+      const site = feature.properties['group_survey/group_site/site_name1'];
       return {
-        fillColor: villageColors[village] || "#ccc",
+        fillColor: siteColors[site] || "#ccc",
         color: '#2c2c2c',
         weight: 1.5,
         opacity: 1,
@@ -574,7 +678,125 @@
       }
     }).addTo(map);
 
+    // ── Tree pictogram control ──
+    (function() {
+      const RATIO = 500;
+      const ICON_W = 14, ICON_H = 18;
 
+      const speciesMeta = {
+        khaya_Senegalensis:       { name: 'Khaya senegalensis', common: 'Mahogany',  color: '#8B4513', svg: '<svg width="14" height="18" viewBox="0 0 14 18"><circle cx="7" cy="6" r="6" fill="CCC"/><rect x="6" y="11" width="2" height="7" fill="CCC"/></svg>' },
+        cassia_sieberiana:        { name: 'Cassia sieberiana',  common: 'Cassia',    color: '#DAA520', svg: '<svg width="14" height="18" viewBox="0 0 14 18"><rect x="6" y="7" width="2" height="11" fill="CCC"/><circle cx="4" cy="6" r="3.5" fill="CCC"/><circle cx="10" cy="6" r="3.5" fill="CCC"/><circle cx="7" cy="4" r="3.5" fill="CCC"/></svg>' },
+        anacardium_occidentale:   { name: 'Anacardium occidentale', common: 'Cashew', color: '#2E8B57', svg: '<svg width="14" height="18" viewBox="0 0 14 18"><ellipse cx="7" cy="6" rx="7" ry="4" fill="CCC"/><rect x="6" y="9" width="2" height="9" fill="CCC"/></svg>' },
+        mangifera_indica:         { name: 'Mangifera indica',   common: 'Mango',     color: '#228B22', svg: '<svg width="14" height="18" viewBox="0 0 14 18"><ellipse cx="7" cy="6" rx="5" ry="6" fill="CCC"/><rect x="6" y="11" width="2" height="7" fill="CCC"/></svg>' },
+        tectona_grandis:          { name: 'Tectona grandis',    common: 'Teak',      color: '#6B8E23', svg: '<svg width="14" height="18" viewBox="0 0 14 18"><ellipse cx="7" cy="5" rx="3" ry="6" fill="CCC"/><rect x="6" y="10" width="2" height="8" fill="CCC"/></svg>' },
+        tamarindus_indica:        { name: 'Tamarindus indica',  common: 'Tamarind',  color: '#CD853F', svg: '<svg width="14" height="18" viewBox="0 0 14 18"><path d="M1 8 Q7 -2 13 8 Z" fill="CCC"/><rect x="6" y="8" width="2" height="10" fill="CCC"/></svg>' },
+        afzelia_africana:         { name: 'Afzelia africana',   common: 'Afzelia',   color: '#A0522D', svg: '<svg width="14" height="18" viewBox="0 0 14 18"><polygon points="7,0 1,11 13,11" fill="CCC"/><rect x="6" y="11" width="2" height="7" fill="CCC"/></svg>' },
+        vitellaria_paradoxa:      { name: 'Vitellaria paradoxa', common: 'Shea',     color: '#BDB76B', svg: '<svg width="14" height="18" viewBox="0 0 14 18"><circle cx="7" cy="5" r="4.5" fill="CCC"/><rect x="6" y="9" width="2" height="9" fill="CCC"/></svg>' }
+      };
+
+      function iconSvg(species) {
+        const m = speciesMeta[species];
+        return m.svg.replace(/CCC/g, m.color);
+      }
+
+      // Order sites by label
+      const siteKeys = Object.keys(siteColors);
+
+      // Aggregate species per site from data (handle duplicate species entries + skip 0)
+      const siteSpecies = {};
+      geojsonData.features.forEach(f => {
+        const siteKey = f.properties['group_survey/group_site/site_name1'];
+        const planted = f.properties['group_survey/trees_planted_yes/repeat_planted'];
+        const counts = {};
+        planted.forEach(s => {
+          const sp = s['group_survey/trees_planted_yes/repeat_planted/group_planted_details/species'];
+          const n = s['group_survey/trees_planted_yes/repeat_planted/group_planted_details/number_planted'];
+          counts[sp] = (counts[sp] || 0) + n;
+        });
+        siteSpecies[siteKey] = counts;
+      });
+
+      function renderIconGrid(species, count) {
+        const full = Math.floor(count / RATIO);
+        const frac = (count % RATIO) / RATIO;
+        const svg = iconSvg(species);
+        let html = '<div class="tree-icon-grid">';
+        for (let i = 0; i < full; i++) html += svg;
+        if (frac > 0.02) {
+          const pw = Math.round(frac * ICON_W);
+          html += '<span class="tree-icon-partial" style="width:' + Math.max(pw, 2) + 'px;height:' + ICON_H + 'px">' + svg + '</span>';
+        }
+        html += '</div>';
+        return html;
+      }
+
+      // Create a wrapper div inside the topleft control corner
+      var corner = map._controlCorners['topleft'];
+      var wrap = L.DomUtil.create('div', 'tree-picto-wrap', corner);
+      L.DomEvent.disableClickPropagation(wrap);
+      L.DomEvent.disableScrollPropagation(wrap);
+
+      // One box per site
+      siteKeys.forEach(function(siteKey) {
+        var label = siteLabels[siteKey];
+        var color = siteColors[siteKey];
+        var counts = siteSpecies[siteKey];
+        if (!counts) return;
+        var total = Object.values(counts).reduce(function(a, b) { return a + b; }, 0);
+
+        var box = L.DomUtil.create('div', 'tree-pictogram', wrap);
+        box.style.setProperty('--site-color', color);
+        box.innerHTML = '<div class="tree-site-header">' +
+          label + ' (' + total.toLocaleString() + ')</div>';
+
+        // Sort species by count descending
+        var speciesList = Object.entries(counts)
+          .filter(function(e) { return e[1] > 0; })
+          .sort(function(a, b) { return b[1] - a[1]; });
+
+        speciesList.forEach(function(entry) {
+          var sp = entry[0], n = entry[1];
+          var meta = speciesMeta[sp];
+          if (!meta) return;
+          box.innerHTML += '<div class="tree-species-row">' +
+            renderIconGrid(sp, n) +
+            '<div class="tree-species-info">' +
+              '<span class="tree-species-label">' + meta.name + ' <span class="tree-species-common">(' + meta.common + ')</span></span>' +
+              '<span class="tree-species-count">' + n.toLocaleString() + '</span>' +
+            '</div></div>';
+        });
+
+        // Hover: highlight corresponding polygon
+        (function(key, boxEl) {
+          var targetLayer = null;
+          geojsonLayer.eachLayer(function(layer) {
+            if (layer.feature.properties['group_survey/group_site/site_name1'] === key) {
+              targetLayer = layer;
+            }
+          });
+          if (!targetLayer) return;
+          boxEl.addEventListener('mouseenter', function() {
+            targetLayer.setStyle({ weight: 3.5, color: '#1a1a1a', fillOpacity: 0.9 });
+            targetLayer.bringToFront();
+          });
+          boxEl.addEventListener('mouseleave', function() {
+            geojsonLayer.resetStyle(targetLayer);
+          });
+        })(siteKey, box);
+      });
+
+      // Populate sidebar species legend
+      var specLeg = document.getElementById('speciesLegend');
+      Object.entries(speciesMeta).forEach(function(entry) {
+        var sp = entry[0], meta = entry[1];
+        var row = document.createElement('div');
+        row.className = 'legend-row';
+        row.style.marginBottom = '4px';
+        row.innerHTML = iconSvg(sp) +
+          '<span class="legend-label" style="margin-left:6px;font-size:0.72rem"><i>' + meta.name + '</i> (' + meta.common + ')</span>';
+        specLeg.appendChild(row);
+      });
+    })();
 
     // ── Dynamic scale bar ──
     function updateScaleBar() {
@@ -662,7 +884,7 @@
 
     function insetZoom() {
       // Show ~4 zoom levels out from main map, clamped to reasonable range
-      return Math.max(1, Math.min(map.getZoom() - 4, 12));
+      return Math.max(1, Math.min(map.getZoom() - 8, 12));
     }
 
     function initInsetMap() {
