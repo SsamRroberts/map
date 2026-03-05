@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Leaflet Map – Production Layout</title>
+  <title>British Geological Survey Style Map</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -9,140 +9,694 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-minimap/dist/Control.MiniMap.min.css" />
 
+  <!-- Google Fonts: serif for titles, clean sans for body -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
+
   <style>
-    html, body { margin:0; padding:0; height:100%; }
-    #map { width:100%; height:100%; }
-
-    /* B&W tiles for main map */
-    .bw-tile { filter: grayscale(100%) brightness(90%) !important; }
-
-    /* Title control */
-    .title-control {
-      background: rgba(255,255,255,0.9);
-      padding: 10px 12px;
-      border-radius: 6px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-      font-family: sans-serif;
-      line-height: 1.4em;
+    :root {
+      --bgs-cream:    #ffffff;
+      --bgs-border:   #2c2c2c;
+      --bgs-rule:     #8a8275;
+      --bgs-title:    #1a1a1a;
+      --bgs-subtitle: #4a4a4a;
+      --bgs-muted:    #6b6459;
+      --bgs-accent:   #c0392b;
+      --serif:        'Playfair Display', 'Georgia', serif;
+      --sans:         'Source Sans 3', 'Helvetica Neue', sans-serif;
     }
-    .title-control h2 { margin:0 0 4px 0; font-size:1.2em; }
-    .title-control p { margin:0; font-size:0.9em; }
 
-    /* Legend styling */
-    .legend {
-      background: white;
-      padding: 6px;
-      border:1px solid #ccc;
-      border-radius:4px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-      font-family: sans-serif;
-      line-height:1.3em;
-      margin-bottom:5px;
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: var(--bgs-cream);
+      font-family: var(--sans);
+      color: var(--bgs-title);
     }
-    .legend-color { display:inline-block; width:20px; height:20px; margin-right:5px; vertical-align:middle; }
 
-    /* Bottom-right controls spacing */
-    .leaflet-bottom.leaflet-right .leaflet-control {
-      margin-bottom: 8px; /* space between MiniMap, scale, legend */
+    /* ── Page frame ── */
+    .sheet {
+      display: grid;
+      grid-template-rows: 1fr auto;
+      grid-template-columns: 1fr 220px;
+      height: 100vh;
+      padding: 18px 22px;
+      gap: 0;
+    }
+
+    /* ── Map container with formal border + tick marks ── */
+    .map-frame {
+      position: relative;
+      border: 2px solid var(--bgs-border);
+      overflow: hidden;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Graticule tick marks along map border */
+    .tick-marks {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      z-index: 800;
+    }
+
+    .tick {
+      position: absolute;
+      background: var(--bgs-border);
+    }
+
+    .tick-top, .tick-bottom { width: 2px; height: 16px; }
+    .tick-left, .tick-right { width: 16px; height: 2px; }
+
+    .tick-label {
+      position: absolute;
+      font-size: 0.75rem;
+      font-family: var(--sans);
+      font-weight: 700;
+      color: var(--bgs-border);
+      pointer-events: none;
+      z-index: 801;
+      white-space: nowrap;
+      text-shadow: 1px 1px 2px rgba(255,255,255,0.85), -1px -1px 2px rgba(255,255,255,0.85);
+    }
+
+    /* B&W desaturated tiles */
+    .bw-tile {
+      filter: grayscale(100%) brightness(92%) contrast(1.05) !important;
+    }
+
+    /* ── Right-hand sidebar: legend + inset ── */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding-left: 14px;
+      overflow-y: auto;
+    }
+
+    .panel {
+      background: transparent;
+      padding: 4px 0;
+    }
+
+    .panel-title {
+      font-family: var(--serif);
+      font-weight: 700;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border-bottom: 1.5px solid var(--bgs-border);
+      padding-bottom: 5px;
+      margin-bottom: 8px;
+    }
+
+    /* Legend */
+    .legend-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+      font-size: 0.8rem;
+    }
+
+    .legend-swatch {
+      width: 28px;
+      height: 16px;
+      border: 1px solid #333;
+      margin-right: 8px;
+      flex-shrink: 0;
+    }
+
+    .legend-label {
+      font-weight: 400;
+      color: var(--bgs-title);
+    }
+
+    .legend-code {
+      font-weight: 600;
+      margin-right: 4px;
+      min-width: 16px;
+    }
+
+    /* Inset / location map */
+    .inset-map {
+      width: 100%;
+      height: 180px;
+      border: 1px solid var(--bgs-border);
+    }
+
+    /* North arrow */
+    .north-arrow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 6px 0;
+    }
+
+    .north-arrow svg {
+      width: 28px;
+      height: 50px;
+    }
+
+    .north-arrow span {
+      font-family: var(--serif);
+      font-weight: 700;
+      font-size: 0.85rem;
+      margin-bottom: 2px;
+    }
+
+    /* Scale bar panel */
+    .scale-bar-container {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .scale-bar {
+      display: flex;
+      height: 8px;
+      border: 1px solid var(--bgs-border);
+      overflow: hidden;
+      margin-top: 4px;
+      width: 100%;
+    }
+
+    .scale-segment {
+      flex: 1;
+      height: 100%;
+    }
+
+    .scale-segment:nth-child(odd) { background: var(--bgs-border); }
+    .scale-segment:nth-child(even) { background: #fff; }
+
+    .scale-labels {
+      position: relative;
+      width: 100%;
+      height: 1.1em;
+      margin-top: 2px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--bgs-title);
+    }
+
+    .scale-labels span {
+      position: absolute;
+      transform: translateX(-50%);
+      white-space: nowrap;
+    }
+
+    .scale-labels span:first-child {
+      transform: translateX(0);
+    }
+
+    .scale-labels span:last-child {
+      transform: translateX(-100%);
+    }
+
+    .scale-unit {
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--bgs-muted);
+      margin-top: 2px;
+    }
+
+    .scale-ratio {
+      font-size: 0.65rem;
+      color: var(--bgs-muted);
+      margin-top: 3px;
+      font-weight: 600;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      grid-column: 1 / -1;
+      border-top: 3px solid var(--bgs-border);
+      margin-top: 14px;
+      padding-top: 10px;
+    }
+
+    .footer-title {
+      font-family: var(--serif);
+      font-weight: 900;
+      font-size: 1.5rem;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      color: var(--bgs-title);
+      line-height: 1.15;
+      margin: 0 0 2px 0;
+    }
+
+    .footer-subtitle {
+      font-family: var(--sans);
+      font-weight: 300;
+      font-size: 0.88rem;
+      color: var(--bgs-subtitle);
+      letter-spacing: 0.04em;
+      margin-bottom: 8px;
+    }
+
+    .footer-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.75rem;
+      line-height: 1.4;
+    }
+
+    .footer-table td {
+      padding: 3px 12px 3px 0;
+      vertical-align: top;
+      border-top: 1px solid #ddd;
+    }
+
+    .footer-table tr:first-child td {
+      border-top: 1.5px solid var(--bgs-border);
+    }
+
+    .footer-table .ft-label {
+      font-weight: 600;
+      color: var(--bgs-title);
+      white-space: nowrap;
+      width: 1%;
+    }
+
+    .footer-table .ft-value {
+      color: var(--bgs-muted);
+    }
+
+    /* ── Hide default Leaflet controls — we render our own ── */
+    .leaflet-control-zoom { display: none !important; }
+    .leaflet-control-attribution {
+      font-size: 0 !important;
+      background: transparent !important;
+      box-shadow: none !important;
+    }
+
+    /* Popup styling */
+    .leaflet-popup-content-wrapper {
+      border-radius: 2px;
+      font-family: var(--sans);
+      font-size: 0.85rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    }
+
+    .leaflet-popup-tip {
+      box-shadow: none;
+    }
+
+    /* ── Responsive tweaks ── */
+    @media (max-width: 700px) {
+      .sheet {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr auto auto;
+        padding: 10px;
+      }
+      .sidebar {
+        padding-left: 0;
+        padding-top: 10px;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .sidebar .panel { flex: 1; min-width: 140px; }
+      .header-left h1 { font-size: 1.2rem; }
     }
   </style>
 </head>
 <body>
-  <div id="map"></div>
+  <div class="sheet">
+
+    <!-- ── MAP ── -->
+    <div class="map-frame">
+      <div id="map"></div>
+      <div class="tick-marks" id="tickMarks"></div>
+    </div>
+
+    <!-- ── SIDEBAR ── -->
+    <aside class="sidebar">
+
+      <!-- North Arrow -->
+      <div class="panel">
+        <div class="north-arrow">
+          <span>N</span>
+          <svg viewBox="0 0 28 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="14,0 7,20 14,15 21,20" fill="#1a1a1a"/>
+            <polygon points="14,15 7,20 14,50 21,20" fill="none" stroke="#1a1a1a" stroke-width="1.2"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Scale -->
+      <div class="panel">
+        <div class="panel-title">Scale</div>
+        <div class="scale-bar-container" id="scaleBarContainer">
+          <div class="scale-bar" id="scaleBar"></div>
+          <div class="scale-labels" id="scaleLabels"></div>
+          <div class="scale-ratio" id="scaleRatio"></div>
+        </div>
+      </div>
+
+      <!-- Legend -->
+      <div class="panel">
+        <div class="panel-title">Explanation</div>
+        <div id="legendEntries"></div>
+      </div>
+
+      <!-- Inset / location map -->
+      <div class="panel">
+        <div class="panel-title">Location</div>
+        <div id="insetMap" class="inset-map"></div>
+      </div>
+
+    </aside>
+
+    <!-- ── FOOTER ── -->
+    <footer class="footer">
+      <div class="footer-title">London Basin</div>
+      <div class="footer-subtitle">Solid and Drift Geology &mdash; Central London District</div>
+      <table class="footer-table">
+        <tr>
+          <td class="ft-label">Sheet</td>
+          <td class="ft-value">256</td>
+          <td class="ft-label">Edition</td>
+          <td class="ft-value" colspan="3">Provisional</td>
+        </tr>
+        <tr>
+          <td class="ft-label">Projection</td>
+          <td class="ft-value">Web Mercator (EPSG:3857)</td>
+          <td class="ft-label">Datum</td>
+          <td class="ft-value">WGS 84</td>
+          <td class="ft-label">Compiled</td>
+          <td class="ft-value">2026</td>
+        </tr>
+        <tr>
+          <td class="ft-label">Base mapping</td>
+          <td class="ft-value" colspan="3">&copy; OpenStreetMap contributors. Geological linework is illustrative only.</td>
+          <td class="ft-label">Copyright</td>
+          <td class="ft-value">Crown Copyright Reserved</td>
+        </tr>
+      </table>
+    </footer>
+
+  </div>
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet-minimap/dist/Control.MiniMap.min.js"></script>
 
   <script>
-    // --- GeoJSON sample points ---
+    // ── Sample GeoJSON ──
     const geojsonData = {
       "type": "FeatureCollection",
       "features": [
-        { "type": "Feature", "properties": {"name": "Point 1", "type": "A"}, "geometry": {"type": "Point", "coordinates": [-0.1, 51.5]} },
-        { "type": "Feature", "properties": {"name": "Point 2", "type": "B"}, "geometry": {"type": "Point", "coordinates": [-0.12, 51.52]} },
-        { "type": "Feature", "properties": {"name": "Point 3", "type": "C"}, "geometry": {"type": "Point", "coordinates": [-0.08, 51.48]} },
-        { "type": "Feature", "properties": {"name": "Point 4", "type": "D"}, "geometry": {"type": "Point", "coordinates": [-0.11, 51.49]} },
-        { "type": "Feature", "properties": {"name": "Point 5", "type": "E"}, "geometry": {"type": "Point", "coordinates": [-0.09, 51.51]} },
-        { "type": "Feature", "properties": {"name": "Point 6", "type": "F"}, "geometry": {"type": "Point", "coordinates": [-0.13, 51.5]} }
+        { "type": "Feature", "properties": {"name": "Alluvium", "type": "Al"}, "geometry": {"type": "Point", "coordinates": [-0.1, 51.5]} },
+        { "type": "Feature", "properties": {"name": "River Terrace Deposits", "type": "RTD"}, "geometry": {"type": "Point", "coordinates": [-0.12, 51.52]} },
+        { "type": "Feature", "properties": {"name": "London Clay Formation", "type": "LC"}, "geometry": {"type": "Point", "coordinates": [-0.08, 51.48]} },
+        { "type": "Feature", "properties": {"name": "Lambeth Group", "type": "LG"}, "geometry": {"type": "Point", "coordinates": [-0.11, 51.49]} },
+        { "type": "Feature", "properties": {"name": "Thanet Sand Formation", "type": "TS"}, "geometry": {"type": "Point", "coordinates": [-0.09, 51.51]} },
+        { "type": "Feature", "properties": {"name": "White Chalk Subgroup", "type": "WC"}, "geometry": {"type": "Point", "coordinates": [-0.13, 51.5]} }
       ]
     };
 
+    // BGS-inspired geological palette
     const typeColors = {
-      "A": "#b35807",
-      "B": "#e4ad6c",
-      "C": "#f1e2cd",
-      "D": "#ccece7",
-      "E": "#80cdbb",
-      "F": "#009380"
+      "Al":  "#e8d5a3",   // alluvium: pale sandy yellow
+      "RTD": "#d4a96a",   // river terrace: warm ochre
+      "LC":  "#7b9f8e",   // London Clay: grey-green
+      "LG":  "#a68bb2",   // Lambeth Group: muted purple
+      "TS":  "#c9b97a",   // Thanet Sand: khaki
+      "WC":  "#d1e2d0"    // Chalk: pale green-white
     };
 
-    // --- Initialize map ---
-    const map = L.map('map').setView([51.5, -0.1], 13);
+    const typeLabels = {
+      "Al":  "Alluvium",
+      "RTD": "River Terrace Deposits",
+      "LC":  "London Clay Formation",
+      "LG":  "Lambeth Group",
+      "TS":  "Thanet Sand Formation",
+      "WC":  "White Chalk Subgroup"
+    };
 
-    // B&W tiles
-    const osmBW = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors',
+    // ── Populate legend ──
+    const legendEl = document.getElementById('legendEntries');
+    for (const [code, color] of Object.entries(typeColors)) {
+      const row = document.createElement('div');
+      row.className = 'legend-row';
+      row.innerHTML = `<div class="legend-swatch" style="background:${color}"></div>
+        <span class="legend-code">${code}</span>
+        <span class="legend-label">${typeLabels[code]}</span>`;
+      legendEl.appendChild(row);
+    }
+
+    // ── Main map ──
+    const map = L.map('map', {
+      zoomControl: false,
+      attributionControl: true
+    }).setView([51.5, -0.1], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '',
       className: 'bw-tile'
     }).addTo(map);
 
-    // --- GeoJSON points ---
-    function style(feature) {
+    // ── GeoJSON points ──
+    function pointStyle(feature) {
       return {
-        radius: 9,
-        fillColor: typeColors[feature.properties.type] || "#000000",
-        color: '#000',
+        radius: 10,
+        fillColor: typeColors[feature.properties.type] || "#ccc",
+        color: '#2c2c2c',
         weight: 1.5,
         opacity: 1,
-        fillOpacity: 0.6
+        fillOpacity: 0.85
       };
     }
+
     const geojsonLayer = L.geoJSON(geojsonData, {
-      pointToLayer: (feature, latlng) => L.circleMarker(latlng, style(feature)),
-      onEachFeature: (feature, layer) => layer.bindPopup(feature.properties.name)
+      pointToLayer: (feature, latlng) => L.circleMarker(latlng, pointStyle(feature)),
+      onEachFeature: (feature, layer) => {
+        const p = feature.properties;
+        layer.bindPopup(`<strong>${p.name}</strong><br><em>${p.type}</em>`);
+      }
     }).addTo(map);
-    map.fitBounds(geojsonLayer.getBounds());
 
-    // --- Bottom-left: Title control ---
-    const titleControl = L.Control.extend({
-      options: { position: 'bottomleft' },
-      onAdd: function(map) {
-        const container = L.DomUtil.create('div', 'title-control');
-        container.innerHTML = `
-          <h2>Sample Map Title</h2>
-          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin lacinia.</p>
-        `;
-        L.DomEvent.disableClickPropagation(container);
-        L.DomEvent.disableScrollPropagation(container);
-        return container;
+    map.fitBounds(geojsonLayer.getBounds().pad(0.15));
+
+    // ── Dynamic scale bar ──
+    function updateScaleBar() {
+      const barEl = document.getElementById('scaleBar');
+      const labelsEl = document.getElementById('scaleLabels');
+      const ratioEl = document.getElementById('scaleRatio');
+      barEl.innerHTML = '';
+      labelsEl.innerHTML = '';
+
+      // Compute metres-per-pixel at map centre
+      const centre = map.getCenter();
+      const zoom = map.getZoom();
+      const metersPerPx = 40075016.686 * Math.cos(centre.lat * Math.PI / 180) / Math.pow(2, zoom + 8);
+
+      // Bar width in pixels (use panel width)
+      const barWidth = barEl.parentElement.offsetWidth;
+      const maxMeters = barWidth * metersPerPx;
+
+      // Pick a nice round distance and segment count that guarantees
+      // a minimum pixel width per segment (so labels never overlap)
+      const minPxPerSeg = 36;
+      const niceValues = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000];
+      const segOptions = [4, 2]; // prefer 4 segments, fall back to 2
+
+      let dist = niceValues[0];
+      let segments = segOptions[0];
+
+      for (const segs of segOptions) {
+        let found = false;
+        for (const v of niceValues) {
+          const px = v / metersPerPx;
+          if (px > barWidth) break;
+          if (px / segs >= minPxPerSeg) {
+            dist = v;
+            segments = segs;
+            found = true;
+          }
+        }
+        if (found) break;
       }
-    });
-    map.addControl(new titleControl());
 
-    // --- Bottom-right: Legend, Scale, MiniMap ---
-    // Legend
-    const legend = L.control({ position: 'bottomright' });
-    legend.onAdd = function(map) {
-      const div = L.DomUtil.create('div', 'legend');
-      for (const [type,color] of Object.entries(typeColors)) {
-        div.innerHTML += `<div><span class="legend-color" style="background:${color}"></span> Type ${type}</div>`;
+      const segDist = dist / segments;
+      const totalPx = dist / metersPerPx;
+      barEl.style.width = Math.max(totalPx, minPxPerSeg * segments) + 'px';
+
+      for (let i = 0; i < segments; i++) {
+        const seg = document.createElement('div');
+        seg.className = 'scale-segment';
+        barEl.appendChild(seg);
       }
-      return div;
-    };
-    legend.addTo(map);
 
-    // Scale bar
-    L.control.scale({ position: 'bottomright', metric:true, imperial:false, maxWidth:200 }).addTo(map);
+      labelsEl.style.width = totalPx + 'px';
+      const useKm = dist >= 1000;
+      for (let i = 0; i <= segments; i++) {
+        const lbl = document.createElement('span');
+        const m = segDist * i;
+        lbl.textContent = useKm ? (m / 1000) : m;
+        lbl.style.left = (i / segments * 100) + '%';
+        labelsEl.appendChild(lbl);
+      }
+      // Unit label below
+      let unitEl = document.getElementById('scaleUnit');
+      if (!unitEl) {
+        unitEl = document.createElement('div');
+        unitEl.id = 'scaleUnit';
+        unitEl.className = 'scale-unit';
+        labelsEl.parentElement.appendChild(unitEl);
+      }
+      unitEl.textContent = useKm ? 'km' : 'm';
 
-    // MiniMap inset
-    const osmColor = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
-    const miniMap = new L.Control.MiniMap(osmColor, { toggleDisplay:false, minimized:false, position:'bottomright' }).addTo(map);
-
-    function updateMiniRect() {
-      if(window.miniRect) miniMap._miniMap.removeLayer(window.miniRect);
-      window.miniRect = L.rectangle(map.getBounds(), { color:'grey', weight:1.5, fillOpacity:0.2 }).addTo(miniMap._miniMap);
+      // Approximate representative fraction
+      const screenDPI = 96;
+      const metersPerScreenUnit = 0.0254 / screenDPI;
+      const rf = Math.round(metersPerPx / metersPerScreenUnit);
+      ratioEl.textContent = '1 : ' + rf.toLocaleString();
     }
-    updateMiniRect();
-    map.on('moveend', updateMiniRect);
+
+    updateScaleBar();
+    map.on('zoomend', updateScaleBar);
+    map.on('moveend', updateScaleBar);
+
+    // ── Inset / location map ──
+    // Defer initialisation so the container has a painted size
+    let insetMap, extentRect;
+
+    function insetZoom() {
+      // Show ~4 zoom levels out from main map, clamped to reasonable range
+      return Math.max(1, Math.min(map.getZoom() - 4, 12));
+    }
+
+    function initInsetMap() {
+      insetMap = L.map('insetMap', {
+        zoomControl: false,
+        attributionControl: false,
+        dragging: false,
+        scrollWheelZoom: false,
+        doubleClickZoom: false,
+        touchZoom: false,
+        keyboard: false,
+        boxZoom: false
+      }).setView(map.getCenter(), insetZoom());
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        className: 'bw-tile'
+      }).addTo(insetMap);
+
+      updateExtentRect();
+      map.on('moveend', updateExtentRect);
+      map.on('zoomend', updateExtentRect);
+    }
+
+    function updateExtentRect() {
+      if (!insetMap) return;
+      // Re-centre and re-zoom the inset to track the main map
+      insetMap.setView(map.getCenter(), insetZoom(), { animate: false });
+      if (extentRect) insetMap.removeLayer(extentRect);
+      extentRect = L.rectangle(map.getBounds(), {
+        color: '#c0392b',
+        weight: 2,
+        fillColor: '#c0392b',
+        fillOpacity: 0.15
+      }).addTo(insetMap);
+    }
+
+    // Wait for layout to settle, then init the inset
+    setTimeout(function() {
+      initInsetMap();
+    }, 200);
+
+    // ── Graticule tick marks ──
+    function renderTicks() {
+      const container = document.getElementById('tickMarks');
+      container.innerHTML = '';
+      const bounds = map.getBounds();
+      const mapEl = document.getElementById('map');
+      const w = mapEl.offsetWidth;
+      const h = mapEl.offsetHeight;
+
+      const nLon = 6;
+      const nLat = 5;
+      const lonMin = bounds.getWest();
+      const lonMax = bounds.getEast();
+      const latMin = bounds.getSouth();
+      const latMax = bounds.getNorth();
+
+      function niceStep(range, count) {
+        const raw = range / count;
+        const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+        const options = [1, 2, 2.5, 5, 10];
+        for (const m of options) { if (mag * m >= raw) return mag * m; }
+        return mag * 10;
+      }
+
+      const lonStep = niceStep(lonMax - lonMin, nLon);
+      const latStep = niceStep(latMax - latMin, nLat);
+
+      const lonStart = Math.ceil(lonMin / lonStep) * lonStep;
+      const latStart = Math.ceil(latMin / latStep) * latStep;
+
+      for (let lon = lonStart; lon <= lonMax; lon += lonStep) {
+        const pt = map.latLngToContainerPoint([latMin, lon]);
+        if (pt.x < 5 || pt.x > w - 5) continue;
+
+        const tTop = document.createElement('div');
+        tTop.className = 'tick tick-top';
+        tTop.style.left = pt.x + 'px';
+        tTop.style.top = '0';
+        container.appendChild(tTop);
+
+        const tBot = document.createElement('div');
+        tBot.className = 'tick tick-bottom';
+        tBot.style.left = pt.x + 'px';
+        tBot.style.bottom = '0';
+        container.appendChild(tBot);
+
+        const lbl = document.createElement('div');
+        lbl.className = 'tick-label';
+        lbl.style.left = (pt.x + 3) + 'px';
+        lbl.style.bottom = '2px';
+        lbl.textContent = lon.toFixed(3) + '\u00B0';
+        container.appendChild(lbl);
+      }
+
+      for (let lat = latStart; lat <= latMax; lat += latStep) {
+        const pt = map.latLngToContainerPoint([lat, lonMin]);
+        if (pt.y < 5 || pt.y > h - 5) continue;
+
+        const tLeft = document.createElement('div');
+        tLeft.className = 'tick tick-left';
+        tLeft.style.top = pt.y + 'px';
+        tLeft.style.left = '0';
+        container.appendChild(tLeft);
+
+        const tRight = document.createElement('div');
+        tRight.className = 'tick tick-right';
+        tRight.style.top = pt.y + 'px';
+        tRight.style.right = '0';
+        container.appendChild(tRight);
+
+        const lbl = document.createElement('div');
+        lbl.className = 'tick-label';
+        lbl.style.top = (pt.y - 10) + 'px';
+        lbl.style.left = '3px';
+        lbl.textContent = lat.toFixed(3) + '\u00B0';
+        container.appendChild(lbl);
+      }
+    }
+
+    renderTicks();
+    map.on('moveend', renderTicks);
+    window.addEventListener('resize', function() {
+      renderTicks();
+      updateScaleBar();
+      if (insetMap) insetMap.invalidateSize();
+    });
   </script>
 </body>
 </html>
