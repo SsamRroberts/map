@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>British Geological Survey Style Map</title>
+  <title>Northern East Ghana — Tree Planting Sites</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -233,59 +233,70 @@
 
     /* ── Footer ── */
     .footer {
-      grid-column: 1 / -1;
-      border-top: 3px solid var(--bgs-border);
-      margin-top: 14px;
-      padding-top: 10px;
+      grid-column: 1 / 2;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-top: 10px;
+      padding-top: 8px;
+    }
+
+    .footer-logo {
+      height: 56px;
+      width: auto;
+      flex-shrink: 0;
+    }
+
+    .footer-identity {
+      flex-shrink: 0;
     }
 
     .footer-title {
       font-family: var(--serif);
       font-weight: 900;
-      font-size: 1.5rem;
+      font-size: 1.3rem;
       letter-spacing: 0.02em;
       text-transform: uppercase;
-      color: var(--bgs-title);
+      color: #24330d;
       line-height: 1.15;
-      margin: 0 0 2px 0;
     }
 
     .footer-subtitle {
       font-family: var(--sans);
       font-weight: 300;
-      font-size: 0.88rem;
+      font-size: 0.82rem;
       color: var(--bgs-subtitle);
       letter-spacing: 0.04em;
-      margin-bottom: 8px;
     }
 
     .footer-table {
-      width: 100%;
       border-collapse: collapse;
-      font-size: 0.75rem;
-      line-height: 1.4;
+      font-size: 0.72rem;
+      line-height: 1.3;
+      margin-left: auto;
     }
 
     .footer-table td {
-      padding: 3px 12px 3px 0;
+      padding: 1px 6px 1px 0;
       vertical-align: top;
-      border-top: 1px solid #ddd;
-    }
-
-    .footer-table tr:first-child td {
-      border-top: 1.5px solid var(--bgs-border);
     }
 
     .footer-table .ft-label {
       font-weight: 600;
-      color: var(--bgs-title);
+      color: #24330d;
       white-space: nowrap;
-      width: 1%;
+      padding-right: 3px;
+    }
+
+    .footer-table .ft-label::after {
+      content: ':';
     }
 
     .footer-table .ft-value {
       color: var(--bgs-muted);
+      padding-right: 12px;
     }
+
 
     /* ── Hide default Leaflet controls — we render our own ── */
     .leaflet-control-zoom { display: none !important; }
@@ -375,28 +386,27 @@
 
     <!-- ── FOOTER ── -->
     <footer class="footer">
-      <div class="footer-title">London Basin</div>
-      <div class="footer-subtitle">Solid and Drift Geology &mdash; Central London District</div>
+      <img src="logo.jpg" alt="Logo" class="footer-logo">
+      <div class="footer-identity">
+        <div class="footer-title">Northern East Ghana</div>
+        <div class="footer-subtitle">Tree Planting Sites &mdash; West Mamprusi Municipal</div>
+      </div>
       <table class="footer-table">
         <tr>
-          <td class="ft-label">Sheet</td>
-          <td class="ft-value">256</td>
-          <td class="ft-label">Edition</td>
-          <td class="ft-value" colspan="3">Provisional</td>
+          <td class="ft-label">Sites</td>
+          <td class="ft-value">20</td>
+          <td class="ft-label">Villages</td>
+          <td class="ft-value">4</td>
+          <td class="ft-label">Survey</td>
+          <td class="ft-value">Sep 2025</td>
         </tr>
         <tr>
           <td class="ft-label">Projection</td>
           <td class="ft-value">Web Mercator (EPSG:3857)</td>
           <td class="ft-label">Datum</td>
           <td class="ft-value">WGS 84</td>
-          <td class="ft-label">Compiled</td>
-          <td class="ft-value">2026</td>
-        </tr>
-        <tr>
-          <td class="ft-label">Base mapping</td>
-          <td class="ft-value" colspan="3">&copy; OpenStreetMap contributors. Geological linework is illustrative only.</td>
-          <td class="ft-label">Copyright</td>
-          <td class="ft-value">Crown Copyright Reserved</td>
+          <td class="ft-label">Source</td>
+          <td class="ft-value">&copy; OpenStreetMap contributors</td>
         </tr>
       </table>
     </footer>
@@ -405,83 +415,166 @@
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet-minimap/dist/Control.MiniMap.min.js"></script>
+  <script src="data.js"></script>
 
   <script>
-    // ── Sample GeoJSON ──
-    const geojsonData = {
-      "type": "FeatureCollection",
-      "features": [
-        { "type": "Feature", "properties": {"name": "Alluvium", "type": "Al"}, "geometry": {"type": "Point", "coordinates": [-0.1, 51.5]} },
-        { "type": "Feature", "properties": {"name": "River Terrace Deposits", "type": "RTD"}, "geometry": {"type": "Point", "coordinates": [-0.12, 51.52]} },
-        { "type": "Feature", "properties": {"name": "London Clay Formation", "type": "LC"}, "geometry": {"type": "Point", "coordinates": [-0.08, 51.48]} },
-        { "type": "Feature", "properties": {"name": "Lambeth Group", "type": "LG"}, "geometry": {"type": "Point", "coordinates": [-0.11, 51.49]} },
-        { "type": "Feature", "properties": {"name": "Thanet Sand Formation", "type": "TS"}, "geometry": {"type": "Point", "coordinates": [-0.09, 51.51]} },
-        { "type": "Feature", "properties": {"name": "White Chalk Subgroup", "type": "WC"}, "geometry": {"type": "Point", "coordinates": [-0.13, 51.5]} }
-      ]
-    };
-
-    // BGS-inspired geological palette
-    const typeColors = {
-      "Al":  "#e8d5a3",   // alluvium: pale sandy yellow
-      "RTD": "#d4a96a",   // river terrace: warm ochre
-      "LC":  "#7b9f8e",   // London Clay: grey-green
-      "LG":  "#a68bb2",   // Lambeth Group: muted purple
-      "TS":  "#c9b97a",   // Thanet Sand: khaki
-      "WC":  "#d1e2d0"    // Chalk: pale green-white
-    };
-
-    const typeLabels = {
-      "Al":  "Alluvium",
-      "RTD": "River Terrace Deposits",
-      "LC":  "London Clay Formation",
-      "LG":  "Lambeth Group",
-      "TS":  "Thanet Sand Formation",
-      "WC":  "White Chalk Subgroup"
+    // ── Village colour palette ──
+    const villageColors = {
+      "Gbeo":     "#7b9f8e",
+      "Kpakpiri": "#d4a96a",
+      "Kpatuse":  "#a68bb2",
+      "Kulugu":   "#c9b97a"
     };
 
     // ── Populate legend ──
     const legendEl = document.getElementById('legendEntries');
-    for (const [code, color] of Object.entries(typeColors)) {
+    for (const [village, color] of Object.entries(villageColors)) {
       const row = document.createElement('div');
       row.className = 'legend-row';
       row.innerHTML = `<div class="legend-swatch" style="background:${color}"></div>
-        <span class="legend-code">${code}</span>
-        <span class="legend-label">${typeLabels[code]}</span>`;
+        <span class="legend-label">${village}</span>`;
       legendEl.appendChild(row);
     }
 
+    // ── Nice scale system ──
+    // Recompute fractional zoom levels for any latitude so the ratio is always exact
+    const C = 40075016.686;
+    const screenDPI = 96;
+    const metersPerScreenPx = 0.0254 / screenDPI;
+
+    const niceScales = [
+      2000000, 1000000, 500000, 250000, 100000, 50000, 25000,
+      10000, 5000, 2500, 1000, 500
+    ];
+
+    function zoomForScale(scale, lat) {
+      return Math.log2((C * Math.cos(lat * Math.PI / 180)) / (scale * 256 * metersPerScreenPx));
+    }
+
+    function niceZoomLevels(lat) {
+      return niceScales.map(s => zoomForScale(s, lat));
+    }
+
+    // Find which nice scale index we're closest to at the current zoom
+    function currentScaleIndex(zoom, lat) {
+      const levels = niceZoomLevels(lat);
+      let bestIdx = 0;
+      let bestDiff = Infinity;
+      for (let i = 0; i < levels.length; i++) {
+        const diff = Math.abs(levels[i] - zoom);
+        if (diff < bestDiff) { bestDiff = diff; bestIdx = i; }
+      }
+      return bestIdx;
+    }
+
     // ── Main map ──
+    const initialZoom = zoomForScale(100000, 10.575);
     const map = L.map('map', {
       zoomControl: false,
-      attributionControl: true
-    }).setView([51.5, -0.1], 13);
+      attributionControl: true,
+      zoomSnap: 0,
+      zoomDelta: 0,
+      wheelPxPerZoomLevel: 120
+    }).setView([10.575, -0.767], initialZoom);
+
+    // Snap zoom to nice levels, recalculated for current latitude
+    function snapZoom(direction) {
+      const lat = map.getCenter().lat;
+      const nextIdx = _currentScaleIdx + (direction > 0 ? 1 : -1);
+      if (nextIdx >= 0 && nextIdx < niceScales.length) {
+        _currentScaleIdx = nextIdx;
+        map.setZoom(zoomForScale(niceScales[nextIdx], lat));
+      }
+    }
+
+    // Track which nice scale index we're at; recalculate on next zoom action
+    let _currentScaleIdx = currentScaleIndex(map.getZoom(), map.getCenter().lat);
+    let _snapping = false;
+
+    // After any pan, smoothly correct zoom for the new latitude
+    map.on('moveend', function() {
+      if (_snapping) return;
+      const lat = map.getCenter().lat;
+      const correctZoom = zoomForScale(niceScales[_currentScaleIdx], lat);
+      if (Math.abs(map.getZoom() - correctZoom) > 0.001) {
+        _snapping = true;
+        map.flyTo(map.getCenter(), correctZoom, { animate: true, duration: 0.3 });
+      }
+    });
+
+    map.on('zoomend', function() { _snapping = false; });
+
+    // Intercept scroll wheel with debounce
+    let _wheelTimer = null;
+    let _wheelAccum = 0;
+    const mapEl = document.getElementById('map');
+    mapEl.addEventListener('wheel', function(e) {
+      e.preventDefault();
+      _wheelAccum += e.deltaY;
+      clearTimeout(_wheelTimer);
+      _wheelTimer = setTimeout(function() {
+        snapZoom(_wheelAccum < 0 ? 1 : -1);
+        _wheelAccum = 0;
+      }, 200);
+    }, { passive: false });
+
+    // Intercept keyboard +/-
+    map.getContainer().addEventListener('keydown', function(e) {
+      if (e.key === '=' || e.key === '+') { e.preventDefault(); snapZoom(1); }
+      if (e.key === '-') { e.preventDefault(); snapZoom(-1); }
+    });
+
+    // Intercept double-click zoom
+    map.doubleClickZoom.disable();
+    map.on('dblclick', function() { snapZoom(1); });
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '',
       className: 'bw-tile'
     }).addTo(map);
 
-    // ── GeoJSON points ──
-    function pointStyle(feature) {
+    // ── GeoJSON polygons ──
+    function polyStyle(feature) {
+      const village = feature.properties['group_survey/group_basic_information_02/village'];
       return {
-        radius: 10,
-        fillColor: typeColors[feature.properties.type] || "#ccc",
+        fillColor: villageColors[village] || "#ccc",
         color: '#2c2c2c',
         weight: 1.5,
         opacity: 1,
-        fillOpacity: 0.85
+        fillOpacity: 0.7
       };
     }
 
+    function formatSpecies(name) {
+      return name.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    }
+
     const geojsonLayer = L.geoJSON(geojsonData, {
-      pointToLayer: (feature, latlng) => L.circleMarker(latlng, pointStyle(feature)),
+      style: polyStyle,
       onEachFeature: (feature, layer) => {
         const p = feature.properties;
-        layer.bindPopup(`<strong>${p.name}</strong><br><em>${p.type}</em>`);
+        const site = p['group_survey/group_site/site_name1'];
+        const village = p['group_survey/group_basic_information_02/village'];
+        const district = p['group_survey/group_basic_information_01/admin_2'];
+        const date = p['group_survey/date_assessment'];
+        const total = p['total_trees_planted'];
+        const planted = p['group_survey/trees_planted_yes/repeat_planted'];
+        const speciesRows = planted.map(s => {
+          const sp = s['group_survey/trees_planted_yes/repeat_planted/group_planted_details/species'];
+          const n = s['group_survey/trees_planted_yes/repeat_planted/group_planted_details/number_planted'];
+          return `<tr><td style="padding-right:8px">${formatSpecies(sp)}</td><td style="text-align:right">${n.toLocaleString()}</td></tr>`;
+        }).join('');
+        layer.bindPopup(
+          `<strong>${site}</strong><br>` +
+          `<em>${village}, ${district}</em><br>` +
+          `Date: ${date}<br><br>` +
+          `<table style="font-size:0.85em">${speciesRows}` +
+          `<tr style="border-top:1px solid #ccc;font-weight:600"><td>Total</td><td style="text-align:right">${total.toLocaleString()}</td></tr></table>`
+        );
       }
     }).addTo(map);
 
-    map.fitBounds(geojsonLayer.getBounds().pad(0.15));
+
 
     // ── Dynamic scale bar ──
     function updateScaleBar() {
@@ -552,7 +645,7 @@
       }
       unitEl.textContent = useKm ? 'km' : 'm';
 
-      // Approximate representative fraction
+      // Exact representative fraction
       const screenDPI = 96;
       const metersPerScreenUnit = 0.0254 / screenDPI;
       const rf = Math.round(metersPerPx / metersPerScreenUnit);
