@@ -683,20 +683,21 @@
       const RATIO = 500;
       const ICON_W = 14, ICON_H = 18;
 
+      const treeSvg = '<svg width="14" height="18" viewBox="0 0 14 18"><rect x="6" y="7" width="2" height="11" fill="CCC"/><circle cx="4" cy="6" r="3.5" fill="CCC"/><circle cx="10" cy="6" r="3.5" fill="CCC"/><circle cx="7" cy="4" r="3.5" fill="CCC"/></svg>';
       const speciesMeta = {
-        khaya_Senegalensis:       { name: 'Khaya senegalensis', common: 'Mahogany',  color: '#8B4513', svg: '<svg width="14" height="18" viewBox="0 0 14 18"><circle cx="7" cy="6" r="6" fill="CCC"/><rect x="6" y="11" width="2" height="7" fill="CCC"/></svg>' },
-        cassia_sieberiana:        { name: 'Cassia sieberiana',  common: 'Cassia',    color: '#DAA520', svg: '<svg width="14" height="18" viewBox="0 0 14 18"><rect x="6" y="7" width="2" height="11" fill="CCC"/><circle cx="4" cy="6" r="3.5" fill="CCC"/><circle cx="10" cy="6" r="3.5" fill="CCC"/><circle cx="7" cy="4" r="3.5" fill="CCC"/></svg>' },
-        anacardium_occidentale:   { name: 'Anacardium occidentale', common: 'Cashew', color: '#2E8B57', svg: '<svg width="14" height="18" viewBox="0 0 14 18"><ellipse cx="7" cy="6" rx="7" ry="4" fill="CCC"/><rect x="6" y="9" width="2" height="9" fill="CCC"/></svg>' },
-        mangifera_indica:         { name: 'Mangifera indica',   common: 'Mango',     color: '#228B22', svg: '<svg width="14" height="18" viewBox="0 0 14 18"><ellipse cx="7" cy="6" rx="5" ry="6" fill="CCC"/><rect x="6" y="11" width="2" height="7" fill="CCC"/></svg>' },
-        tectona_grandis:          { name: 'Tectona grandis',    common: 'Teak',      color: '#6B8E23', svg: '<svg width="14" height="18" viewBox="0 0 14 18"><ellipse cx="7" cy="5" rx="3" ry="6" fill="CCC"/><rect x="6" y="10" width="2" height="8" fill="CCC"/></svg>' },
-        tamarindus_indica:        { name: 'Tamarindus indica',  common: 'Tamarind',  color: '#CD853F', svg: '<svg width="14" height="18" viewBox="0 0 14 18"><path d="M1 8 Q7 -2 13 8 Z" fill="CCC"/><rect x="6" y="8" width="2" height="10" fill="CCC"/></svg>' },
-        afzelia_africana:         { name: 'Afzelia africana',   common: 'Afzelia',   color: '#A0522D', svg: '<svg width="14" height="18" viewBox="0 0 14 18"><polygon points="7,0 1,11 13,11" fill="CCC"/><rect x="6" y="11" width="2" height="7" fill="CCC"/></svg>' },
-        vitellaria_paradoxa:      { name: 'Vitellaria paradoxa', common: 'Shea',     color: '#BDB76B', svg: '<svg width="14" height="18" viewBox="0 0 14 18"><circle cx="7" cy="5" r="4.5" fill="CCC"/><rect x="6" y="9" width="2" height="9" fill="CCC"/></svg>' }
+        khaya_Senegalensis:       { name: 'Khaya senegalensis', common: 'Mahogany',  color: '#8B4513' },
+        cassia_sieberiana:        { name: 'Cassia sieberiana',  common: 'Cassia',    color: '#DAA520' },
+        anacardium_occidentale:   { name: 'Anacardium occidentale', common: 'Cashew', color: '#2E8B57' },
+        mangifera_indica:         { name: 'Mangifera indica',   common: 'Mango',     color: '#228B22' },
+        tectona_grandis:          { name: 'Tectona grandis',    common: 'Teak',      color: '#6B8E23' },
+        tamarindus_indica:        { name: 'Tamarindus indica',  common: 'Tamarind',  color: '#CD853F' },
+        afzelia_africana:         { name: 'Afzelia africana',   common: 'Afzelia',   color: '#A0522D' },
+        vitellaria_paradoxa:      { name: 'Vitellaria paradoxa', common: 'Shea',     color: '#BDB76B' }
       };
 
       function iconSvg(species) {
         const m = speciesMeta[species];
-        return m.svg.replace(/CCC/g, m.color);
+        return treeSvg.replace(/CCC/g, m.color);
       }
 
       // Order sites by label
